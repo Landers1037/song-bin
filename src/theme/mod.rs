@@ -180,6 +180,7 @@ pub fn sync_component_theme(cx: &mut App) {
         manager.current = kind;
         manager.colors = colors;
     }
+    crate::font::apply(cx);
     cx.refresh_windows();
 }
 

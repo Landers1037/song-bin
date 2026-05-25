@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "gpui": {
+      "source": "aprilnea/gpui-skills",
+      "sourceType": "github",
+      "skillPath": "gpui/SKILL.md",
+      "computedHash": "7ba3b39697eaaf1f295a05d85fa2de3ace14c47967f6069ad8cefb964b0340bb"
+    }
+  }
+}

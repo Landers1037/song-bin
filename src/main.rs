@@ -1,5 +1,6 @@
 mod app;
 mod core;
+mod font;
 mod proxy;
 mod state;
 mod theme;
@@ -35,6 +36,7 @@ fn run_app(app_state: state::app_state::AppState) {
         .with_assets(Assets)
         .run(move |cx: &mut App| {
             gpui_component::init(cx);
+            font::init(cx);
             theme::init_with_kind(cx, theme_kind);
             theme::init_component_themes(cx, &color_theme, theme_kind);
             cx.set_global(app_state);
