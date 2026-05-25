@@ -1,0 +1,10 @@
+{
+  "name": "song-bin",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "cargo run --release",
+    "start:debug": "cargo run",
+    "check": "cargo check",
+    "test": "cargo test"
+  }
+}
