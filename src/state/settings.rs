@@ -8,6 +8,31 @@ use serde::{Deserialize, Serialize};
 use crate::theme::ThemeKind;
 use crate::ui::statusbar::ProxyMode;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum UiLogLevel {
+    #[default]
+    None,
+    Info,
+    Error,
+    Debug,
+}
+
+impl UiLogLevel {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::None => "None",
+            Self::Info => "Info",
+            Self::Error => "Error",
+            Self::Debug => "Debug",
+        }
+    }
+
+    pub fn all() -> &'static [UiLogLevel] {
+        &[Self::None, Self::Info, Self::Error, Self::Debug]
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
     #[serde(default = "default_dark")]
@@ -26,6 +51,8 @@ pub struct AppSettings {
     pub active_node_id: Option<uuid::Uuid>,
     #[serde(default)]
     pub system_proxy: bool,
+    #[serde(default)]
+    pub ui_log_level: UiLogLevel,
 }
 
 fn default_dark() -> ThemeKind {
@@ -59,6 +86,7 @@ impl Default for AppSettings {
             mixed_port: 7890,
             active_node_id: None,
             system_proxy: false,
+            ui_log_level: UiLogLevel::None,
         }
     }
 }

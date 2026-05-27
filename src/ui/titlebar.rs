@@ -9,6 +9,7 @@ use gpui_component::{
 use crate::ui::dialogs::{self, NewNodeProtocol};
 
 use crate::state::app_state::AppState;
+use crate::utils::app_log;
 use crate::theme::{self, ThemeKind};
 use crate::ui::components::button::{Button as AppButton, ButtonVariant};
 use crate::ui::panel::{Panel, PanelContent};
@@ -81,7 +82,7 @@ impl RenderOnce for TitleBar {
                             let sidebar = sidebar.clone();
                             let panel = panel.clone();
                             move |_, _, cx| {
-                                log::info!("[titlebar] 菜单点击: 订阅");
+                                app_log::ui_info(cx, "[titlebar] 菜单点击: 订阅");
                                 sidebar.update(cx, |s, cx| {
                                     s.active_tab = SidebarTab::Subscriptions;
                                     s.selected_index = None;
@@ -200,14 +201,14 @@ fn nodes_dropdown_menu(
                 .item(PopupMenuItem::new("从 URL 中导入节点").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 从 URL 中导入节点");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 从 URL 中导入节点");
                         dialogs::open_import_node_url_dialog(window, cx, sidebar.clone());
                     }
                 }))
                 .item(PopupMenuItem::new("从 URL 中导入订阅").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 从 URL 中导入订阅");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 从 URL 中导入订阅");
                         dialogs::open_import_subscription_url_dialog(window, cx, sidebar.clone());
                     }
                 }))
@@ -215,28 +216,28 @@ fn nodes_dropdown_menu(
                 .item(PopupMenuItem::new("新建 VLESS 节点").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 新建 VLESS 节点");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 新建 VLESS 节点");
                         dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Vless);
                     }
                 }))
                 .item(PopupMenuItem::new("新建 VMess 节点").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 新建 VMess 节点");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 新建 VMess 节点");
                         dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Vmess);
                     }
                 }))
                 .item(PopupMenuItem::new("新建 AnyTLS 节点").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 新建 AnyTLS 节点");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 新建 AnyTLS 节点");
                         dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::AnyTls);
                     }
                 }))
                 .item(PopupMenuItem::new("新建 Trojan 节点").on_click({
                     let sidebar = sidebar.clone();
                     move |_, window, cx| {
-                        log::info!("[titlebar] 节点菜单点击: 新建 Trojan 节点");
+                        app_log::ui_info(cx, "[titlebar] 节点菜单点击: 新建 Trojan 节点");
                         dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Trojan);
                     }
                 }))

@@ -17,6 +17,7 @@ use crate::proxy::protocol::trojan::TrojanConfig;
 use crate::proxy::protocol::vless::{TlsConfig, VlessConfig};
 use crate::proxy::protocol::vmess::VMessConfig;
 use crate::state::app_state::AppState;
+use crate::utils::app_log;
 use crate::ui::sidebar::{Sidebar, SidebarTab};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,7 +44,8 @@ pub fn open_import_node_url_dialog(
     cx: &mut App,
     sidebar: Entity<Sidebar>,
 ) {
-    log::info!("[dialog] 触发打开: 从 URL 中导入节点");
+    app_log::ui_info(cx, "[dialog] 触发打开: 从 URL 中导入节点");
+    app_log::ui_debug(cx, "[dialog] open_import_node_url_dialog");
     open_url_dialog(
         window,
         cx,
@@ -59,7 +61,8 @@ pub fn open_import_subscription_url_dialog(
     cx: &mut App,
     sidebar: Entity<Sidebar>,
 ) {
-    log::info!("[dialog] 触发打开: 从 URL 中导入订阅");
+    app_log::ui_info(cx, "[dialog] 触发打开: 从 URL 中导入订阅");
+    app_log::ui_debug(cx, "[dialog] open_import_subscription_url_dialog");
     open_url_dialog(
         window,
         cx,
@@ -163,7 +166,8 @@ pub fn open_new_node_dialog(
     sidebar: Entity<Sidebar>,
     protocol: NewNodeProtocol,
 ) {
-    log::info!("[dialog] 触发打开: {}", protocol.title());
+    app_log::ui_info(cx, format!("[dialog] 触发打开: {}", protocol.title()));
+    app_log::ui_debug(cx, format!("[dialog] open_new_node_dialog protocol={:?}", protocol));
     let name_input = new_input(window, cx, "节点名称");
     let server_input = new_input(window, cx, "服务器地址");
     let port_input = new_input(window, cx, "443");
