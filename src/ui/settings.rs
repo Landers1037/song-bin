@@ -2,11 +2,13 @@ use gpui::{prelude::*, px, Context, Entity, SharedString, Window};
 
 use gpui_component::{
     ActiveTheme as _, ThemeMode,
+    WindowExt as _,
     h_flex, select::{Select, SelectState}, switch::Switch,
 };
 
 use crate::state::app_state::AppState;
 use crate::state::settings::UiLogLevel;
+use crate::{core::downloader::CoreDownloader, utils::paths};
 use crate::theme;
 use crate::theme::ThemeColors;
 use crate::ui::panel::{LogLevelOption, Panel, ThemeOption};
@@ -154,12 +156,7 @@ fn render_settings_detail(
             render_appearance_settings(window, cx, &panel.theme_select, colors).into_any_element()
         }
         SettingsTab::Proxy => render_proxy_settings(cx, colors).into_any_element(),
-        SettingsTab::Core => render_placeholder_section(
-            "核心设置",
-            "sing-box 核心路径、版本与更新（开发中）",
-            colors,
-        )
-        .into_any_element(),
+        SettingsTab::Core => render_core_settings(window, cx, colors).into_any_element(),
         SettingsTab::Tun => {
             render_placeholder_section("TUN 设置", "TUN 模式与网卡配置（开发中）", colors)
                 .into_any_element()
@@ -267,6 +264,139 @@ fn render_proxy_settings(cx: &mut Context<Panel>, colors: ThemeColors) -> gpui::
                 },
                 colors,
             )),
+        colors,
+    )
+}
+
+fn render_core_settings(
+    _window: &mut Window,
+    _cx: &mut Context<Panel>,
+    colors: ThemeColors,
+) -> gpui::Div {
+    let install_dir = paths::app_install_dir();
+    let core_dir = install_dir.join("sing-box-core");
+    let core_path = core_dir.join("sing-box.exe");
+    let installed = core_path.exists();
+
+    let install_dir_text = install_dir.display().to_string();
+    let core_path_text = core_path.display().to_string();
+
+    section(
+        "核心设置",
+        gpui::div()
+            .flex()
+            .flex_col()
+            .gap(px(4.))
+            .child(setting_row(
+                "程序安装目录",
+                h_flex()
+                    .flex_1()
+                    .min_w(px(0.))
+                    .items_center()
+                    .gap(px(8.))
+                    .child(
+                        gpui::div()
+                            .flex_1()
+                            .min_w(px(0.))
+                            .overflow_hidden()
+                            .text_size(px(13.))
+                            .text_color(colors.text_primary)
+                            .child(install_dir_text),
+                    )
+                    .child(
+                        crate::ui::components::button::Button::new("打开核心目录")
+                            .element_id("open-core-dir-install-row")
+                            .variant(crate::ui::components::button::ButtonVariant::Secondary)
+                            .on_click({
+                                let core_dir = core_dir.clone();
+                                move |window, cx| {
+                                    match paths::open_dir_in_explorer(&core_dir) {
+                                        Ok(()) => window.push_notification("已打开核心目录", cx),
+                                        Err(err) => window.push_notification(
+                                            format!("打开目录失败：{err}"),
+                                            cx,
+                                        ),
+                                    }
+                                }
+                            }),
+                    ),
+                colors,
+            ))
+            .child(setting_row_text("核心安装路径", &core_path_text, colors))
+            .child(setting_row_text(
+                "核心状态",
+                if installed {
+                    "已安装"
+                } else {
+                    "未找到 sing-box.exe（将从 sing-box-core 目录扫描）"
+                },
+                colors,
+            ))
+            .child(
+                h_flex()
+                    .items_center()
+                    .gap(px(8.))
+                    .child(
+                        crate::ui::components::button::Button::new("更新核心")
+                            .element_id("update-core")
+                            .variant(crate::ui::components::button::ButtonVariant::Secondary)
+                            .on_click(|window, cx| {
+                                window
+                                    .spawn(cx, |cx: &mut gpui::AsyncWindowContext| {
+                                        let mut cx = cx.clone();
+                                        async move {
+                                            let result = cx
+                                                .background_executor()
+                                                .spawn(async move { CoreDownloader::download_latest() })
+                                                .await;
+
+                                            let _ = cx.update(|window, cx| match result {
+                                                Ok(path) => {
+                                                    window.push_notification(
+                                                        format!("核心已更新：{}", path.display()),
+                                                        cx,
+                                                    );
+                                                    cx.refresh_windows();
+                                                }
+                                                Err(err) => window
+                                                    .push_notification(format!("更新失败：{err}"), cx),
+                                            });
+                                        }
+                                    })
+                                    .detach();
+                            }),
+                    )
+                    .child(
+                        crate::ui::components::button::Button::new("下载核心")
+                            .element_id("download-core")
+                            .variant(crate::ui::components::button::ButtonVariant::Secondary)
+                            .on_click(|window, cx| {
+                                window
+                                    .spawn(cx, |cx: &mut gpui::AsyncWindowContext| {
+                                        let mut cx = cx.clone();
+                                        async move {
+                                            let result = cx
+                                                .background_executor()
+                                                .spawn(async move { CoreDownloader::download_latest() })
+                                                .await;
+
+                                            let _ = cx.update(|window, cx| match result {
+                                                Ok(path) => {
+                                                    window.push_notification(
+                                                        format!("核心已下载：{}", path.display()),
+                                                        cx,
+                                                    );
+                                                    cx.refresh_windows();
+                                                }
+                                                Err(err) => window
+                                                    .push_notification(format!("下载失败：{err}"), cx),
+                                            });
+                                        }
+                                    })
+                                    .detach();
+                            }),
+                    ),
+            ),
         colors,
     )
 }
@@ -412,16 +542,26 @@ pub fn setting_row(
         .flex()
         .items_center()
         .justify_between()
+        .gap(px(12.))
         .py(px(8.))
         .border_b_1()
         .border_color(colors.border)
         .child(
             gpui::div()
+                .flex_none()
                 .text_size(px(13.))
                 .text_color(colors.text_secondary)
                 .child(label.to_string()),
         )
-        .child(value)
+        .child(
+            gpui::div()
+                .flex_1()
+                .min_w(px(0.))
+                .flex()
+                .justify_end()
+                .items_center()
+                .child(value),
+        )
 }
 
 pub fn setting_row_text(label: &str, value: &str, colors: ThemeColors) -> gpui::Div {

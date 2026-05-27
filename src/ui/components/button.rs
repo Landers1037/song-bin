@@ -14,6 +14,7 @@ pub enum ButtonVariant {
 #[derive(IntoElement)]
 pub struct Button {
     label: SharedString,
+    element_id: Option<SharedString>,
     icon: Option<IconName>,
     variant: ButtonVariant,
     on_click: Option<Box<dyn Fn(&mut Window, &mut App) + 'static>>,
@@ -23,10 +24,17 @@ impl Button {
     pub fn new(label: impl Into<SharedString>) -> Self {
         Self {
             label: label.into(),
+            element_id: None,
             icon: None,
             variant: ButtonVariant::Secondary,
             on_click: None,
         }
+    }
+
+    /// 设置唯一元素 ID，避免同文案按钮在 GPUI 中冲突导致点击无效。
+    pub fn element_id(mut self, id: impl Into<SharedString>) -> Self {
+        self.element_id = Some(id.into());
+        self
     }
 
     pub fn variant(mut self, variant: ButtonVariant) -> Self {
@@ -62,11 +70,13 @@ impl RenderOnce for Button {
         };
 
         let label = self.label.clone();
-        let button_id = if label.is_empty() {
-            SharedString::from("btn-icon")
-        } else {
-            SharedString::from(format!("btn-{}", label))
-        };
+        let button_id = self.element_id.unwrap_or_else(|| {
+            if label.is_empty() {
+                SharedString::from("btn-icon")
+            } else {
+                SharedString::from(format!("btn-{}", label))
+            }
+        });
 
         let content = gpui::div()
             .flex()

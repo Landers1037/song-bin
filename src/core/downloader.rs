@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use crate::state::settings::AppSettings;
+use crate::utils::paths;
 
 const SINGBOX_RELEASE_API: &str =
     "https://api.github.com/repos/SagerNet/sing-box/releases/latest";
@@ -13,7 +14,7 @@ pub struct CoreDownloader;
 
 impl CoreDownloader {
     pub fn core_dir() -> PathBuf {
-        AppSettings::data_dir().join("core")
+        paths::app_install_dir().join("sing-box-core")
     }
 
     pub fn core_path() -> PathBuf {
@@ -44,7 +45,7 @@ impl CoreDownloader {
             .iter()
             .find_map(|asset| {
                 let name = asset.get("name")?.as_str()?;
-                if name.contains("windows") && name.contains("amd64") && name.ends_with(".zip") {
+                if name.ends_with("windows-arm64.zip") {
                     asset
                         .get("browser_download_url")
                         .and_then(|v| v.as_str())
@@ -53,7 +54,7 @@ impl CoreDownloader {
                     None
                 }
             })
-            .ok_or_else(|| anyhow::anyhow!("No windows-amd64 asset found"))?;
+            .ok_or_else(|| anyhow::anyhow!("No windows-arm64 asset found"))?;
 
         log::info!("Downloading from: {}", download_url);
 

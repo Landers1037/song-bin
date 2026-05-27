@@ -6,6 +6,7 @@ use std::sync::{Arc, Mutex};
 use anyhow::Result;
 
 use crate::state::settings::AppSettings;
+use crate::utils::paths;
 
 pub struct SingboxProcess {
     child: Arc<Mutex<Option<Child>>>,
@@ -22,7 +23,7 @@ impl SingboxProcess {
     }
 
     pub fn core_path() -> PathBuf {
-        AppSettings::data_dir().join("core").join("sing-box.exe")
+        paths::app_install_dir().join("sing-box-core").join("sing-box.exe")
     }
 
     pub fn is_core_installed() -> bool {
