@@ -40,7 +40,7 @@ impl Render for Sidebar {
             SidebarTab::Subscriptions => app_state
                 .subscriptions
                 .iter()
-                .map(|s| (s.name.clone(), format!("{} nodes", s.node_count())))
+                .map(|s| (s.name.clone(), format!("{} 个节点", s.node_count())))
                 .collect(),
         };
 
@@ -60,7 +60,7 @@ impl Render for Sidebar {
                     .border_b_1()
                     .border_color(colors.border)
                     .child(tab_button(
-                        "Nodes",
+                        "节点",
                         active_tab == SidebarTab::Nodes,
                         cx.entity().clone(),
                         SidebarTab::Nodes,
@@ -68,7 +68,7 @@ impl Render for Sidebar {
                         colors.text_secondary,
                     ))
                     .child(tab_button(
-                        "Subs",
+                        "订阅",
                         active_tab == SidebarTab::Subscriptions,
                         cx.entity().clone(),
                         SidebarTab::Subscriptions,

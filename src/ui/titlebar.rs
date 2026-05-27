@@ -1,10 +1,16 @@
-use gpui::{prelude::*, px, App, Entity, IntoElement, SharedString, Window, WindowControlArea};
+use gpui::{prelude::*, px, Anchor, App, Entity, IntoElement, SharedString, Window, WindowControlArea};
 
-use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable, Size, ThemeMode};
+use gpui_component::{
+    ActiveTheme as _, Icon, IconName, Sizable, Size, ThemeMode,
+    button::{Button, ButtonVariants as _},
+    menu::{DropdownMenu as _, PopupMenuItem},
+};
+
+use crate::ui::dialogs::{self, NewNodeProtocol};
 
 use crate::state::app_state::AppState;
 use crate::theme::{self, ThemeKind};
-use crate::ui::components::button::{Button, ButtonVariant};
+use crate::ui::components::button::{Button as AppButton, ButtonVariant};
 use crate::ui::panel::{Panel, PanelContent};
 use crate::ui::sidebar::{Sidebar, SidebarTab};
 
@@ -15,8 +21,14 @@ pub struct TitleBar {
 }
 
 impl TitleBar {
-    pub fn new(sidebar: Entity<Sidebar>, panel: Entity<Panel>) -> Self {
-        Self { sidebar, panel }
+    pub fn new(
+        sidebar: Entity<Sidebar>,
+        panel: Entity<Panel>,
+    ) -> Self {
+        Self {
+            sidebar,
+            panel,
+        }
     }
 }
 
@@ -56,25 +68,10 @@ impl RenderOnce for TitleBar {
                             .text_color(colors.accent)
                             .child("song-bin"),
                     )
-                    .child(menu_item(
-                        "节点",
-                        IconName::Network,
+                    .child(nodes_dropdown_menu(
+                        sidebar.clone(),
+                        panel.clone(),
                         colors.text_secondary,
-                        {
-                            let sidebar = sidebar.clone();
-                            let panel = panel.clone();
-                            move |_, _, cx| {
-                                sidebar.update(cx, |s, cx| {
-                                    s.active_tab = SidebarTab::Nodes;
-                                    s.selected_index = None;
-                                    cx.notify();
-                                });
-                                panel.update(cx, |p, cx| {
-                                    p.content = PanelContent::Welcome;
-                                    cx.notify();
-                                });
-                            }
-                        },
                     ))
                     .child(menu_item(
                         "订阅",
@@ -84,6 +81,7 @@ impl RenderOnce for TitleBar {
                             let sidebar = sidebar.clone();
                             let panel = panel.clone();
                             move |_, _, cx| {
+                                log::info!("[titlebar] 菜单点击: 订阅");
                                 sidebar.update(cx, |s, cx| {
                                     s.active_tab = SidebarTab::Subscriptions;
                                     s.selected_index = None;
@@ -125,7 +123,7 @@ impl RenderOnce for TitleBar {
                     .gap(px(4.))
                     .flex_none()
                     .child(
-                        Button::new("")
+                        AppButton::new("")
                             .variant(ButtonVariant::Ghost)
                             .icon(theme_icon)
                             .on_click(|window, cx| {
@@ -140,7 +138,7 @@ impl RenderOnce for TitleBar {
                             }),
                     )
                     .child(
-                        Button::new("设置")
+                        AppButton::new("设置")
                             .variant(ButtonVariant::Ghost)
                             .icon(IconName::Settings2)
                             .on_click({
@@ -162,6 +160,87 @@ impl RenderOnce for TitleBar {
                     .child(window_close_button()),
             )
     }
+}
+
+fn nodes_dropdown_menu(
+    sidebar: Entity<Sidebar>,
+    panel: Entity<Panel>,
+    color: gpui::Hsla,
+) -> impl IntoElement {
+    Button::new("menu-nodes")
+        .ghost()
+        .small()
+        .compact()
+        .text_size(px(12.))
+        .text_color(color)
+        .icon(IconName::Network)
+        .label("节点")
+        .dropdown_caret(true)
+        .dropdown_menu_with_anchor(Anchor::BottomLeft, move |menu, _, _| {
+            let sidebar = sidebar.clone();
+            let panel = panel.clone();
+
+            menu.min_w(px(200.))
+                .item(PopupMenuItem::new("显示节点列表").on_click({
+                    let sidebar = sidebar.clone();
+                    let panel = panel.clone();
+                    move |_, _, cx| {
+                        sidebar.update(cx, |s, cx| {
+                            s.active_tab = SidebarTab::Nodes;
+                            s.selected_index = None;
+                            cx.notify();
+                        });
+                        panel.update(cx, |p, cx| {
+                            p.content = PanelContent::Welcome;
+                            cx.notify();
+                        });
+                    }
+                }))
+                .separator()
+                .item(PopupMenuItem::new("从 URL 中导入节点").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 从 URL 中导入节点");
+                        dialogs::open_import_node_url_dialog(window, cx, sidebar.clone());
+                    }
+                }))
+                .item(PopupMenuItem::new("从 URL 中导入订阅").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 从 URL 中导入订阅");
+                        dialogs::open_import_subscription_url_dialog(window, cx, sidebar.clone());
+                    }
+                }))
+                .separator()
+                .item(PopupMenuItem::new("新建 VLESS 节点").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 新建 VLESS 节点");
+                        dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Vless);
+                    }
+                }))
+                .item(PopupMenuItem::new("新建 VMess 节点").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 新建 VMess 节点");
+                        dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Vmess);
+                    }
+                }))
+                .item(PopupMenuItem::new("新建 AnyTLS 节点").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 新建 AnyTLS 节点");
+                        dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::AnyTls);
+                    }
+                }))
+                .item(PopupMenuItem::new("新建 Trojan 节点").on_click({
+                    let sidebar = sidebar.clone();
+                    move |_, window, cx| {
+                        log::info!("[titlebar] 节点菜单点击: 新建 Trojan 节点");
+                        dialogs::open_new_node_dialog(window, cx, sidebar.clone(), NewNodeProtocol::Trojan);
+                    }
+                }))
+        })
 }
 
 fn menu_item(

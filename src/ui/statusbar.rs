@@ -12,9 +12,9 @@ pub enum ProxyMode {
 impl ProxyMode {
     pub fn label(&self) -> &'static str {
         match self {
-            ProxyMode::Rule => "Rule",
-            ProxyMode::Global => "Global",
-            ProxyMode::Direct => "Direct",
+            ProxyMode::Rule => "规则",
+            ProxyMode::Global => "全局",
+            ProxyMode::Direct => "直连",
         }
     }
 }
@@ -54,7 +54,7 @@ impl Render for StatusBar {
         let node_text: SharedString = self
             .active_node
             .clone()
-            .unwrap_or_else(|| "No active node".to_string())
+            .unwrap_or_else(|| "未选择节点".to_string())
             .into();
 
         let mode_label: SharedString = self.proxy_mode.label().into();

@@ -4,6 +4,7 @@ use serde_yaml::Value;
 use crate::proxy::node::{NodeSource, ProxyNode, ProxyProtocol};
 use crate::proxy::protocol::trojan::TrojanConfig;
 use crate::proxy::protocol::vless::{TlsConfig, VlessConfig};
+use crate::proxy::protocol::vmess::VMessConfig;
 
 pub fn parse(content: &str) -> Result<Vec<ProxyNode>> {
     let yaml: Value = serde_yaml::from_str(content)?;
@@ -90,6 +91,29 @@ pub fn parse(content: &str) -> Result<Vec<ProxyNode>> {
                     .to_string();
                 ProxyProtocol::Trojan(TrojanConfig {
                     password,
+                    tls,
+                    transport: None,
+                })
+            }
+            "vmess" => {
+                let uuid = proxy
+                    .get("uuid")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let alter_id = proxy
+                    .get("alterId")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0) as u16;
+                let security = proxy
+                    .get("cipher")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("auto")
+                    .to_string();
+                ProxyProtocol::Vmess(VMessConfig {
+                    uuid,
+                    alter_id,
+                    security,
                     tls,
                     transport: None,
                 })

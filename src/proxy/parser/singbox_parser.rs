@@ -6,6 +6,7 @@ use crate::proxy::protocol::anytls::AnyTlsConfig;
 use crate::proxy::protocol::trojan::TrojanConfig;
 use crate::proxy::protocol::tuic::TuicConfig;
 use crate::proxy::protocol::vless::{TlsConfig, VlessConfig};
+use crate::proxy::protocol::vmess::VMessConfig;
 
 pub fn parse(content: &str) -> Result<Vec<ProxyNode>> {
     let config: Value = serde_json::from_str(content)?;
@@ -54,6 +55,29 @@ pub fn parse(content: &str) -> Result<Vec<ProxyNode>> {
                 ProxyProtocol::Vless(VlessConfig {
                     uuid,
                     flow,
+                    tls,
+                    transport: None,
+                })
+            }
+            "vmess" => {
+                let uuid = ob
+                    .get("uuid")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let alter_id = ob
+                    .get("alter_id")
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0) as u16;
+                let security = ob
+                    .get("security")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("auto")
+                    .to_string();
+                ProxyProtocol::Vmess(VMessConfig {
+                    uuid,
+                    alter_id,
+                    security,
                     tls,
                     transport: None,
                 })

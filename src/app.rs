@@ -1,4 +1,5 @@
 use gpui::{prelude::*, Context, Entity, Render, Window};
+use gpui_component::Root;
 
 use crate::theme;
 use crate::ui::panel::Panel;
@@ -27,16 +28,23 @@ impl MainView {
 }
 
 impl Render for MainView {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let colors = &theme::theme(cx).colors;
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let colors = theme::theme(cx).colors.clone();
+        let sheet_layer = Root::render_sheet_layer(window, cx);
+        let dialog_layer = Root::render_dialog_layer(window, cx);
+        let notification_layer = Root::render_notification_layer(window, cx);
 
         gpui::div()
+            .id("main-view")
             .flex()
             .flex_col()
             .size_full()
             .bg(colors.background)
             .text_color(colors.text_primary)
-            .child(TitleBar::new(self.sidebar.clone(), self.panel.clone()))
+            .child(TitleBar::new(
+                self.sidebar.clone(),
+                self.panel.clone(),
+            ))
             .child(
                 gpui::div()
                     .flex()
@@ -46,5 +54,8 @@ impl Render for MainView {
                     .child(self.panel.clone()),
             )
             .child(self.status_bar.clone())
+            .children(sheet_layer)
+            .children(dialog_layer)
+            .children(notification_layer)
     }
 }

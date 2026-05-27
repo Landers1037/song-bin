@@ -114,6 +114,19 @@ fn node_to_outbound(node: &ProxyNode) -> Value {
             apply_tls(&mut ob, &cfg.tls);
             ob
         }
+        ProxyProtocol::Vmess(cfg) => {
+            let mut ob = json!({
+                "type": "vmess",
+                "tag": "proxy",
+                "server": node.server,
+                "server_port": node.port,
+                "uuid": cfg.uuid,
+                "security": cfg.security,
+                "alter_id": cfg.alter_id,
+            });
+            apply_tls(&mut ob, &cfg.tls);
+            ob
+        }
         ProxyProtocol::Trojan(cfg) => {
             let mut ob = json!({
                 "type": "trojan",

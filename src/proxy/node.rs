@@ -1,12 +1,17 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::protocol::{anytls::AnyTlsConfig, trojan::TrojanConfig, tuic::TuicConfig, vless::VlessConfig};
+use super::protocol::{
+    anytls::AnyTlsConfig, trojan::TrojanConfig, tuic::TuicConfig, vless::VlessConfig,
+    vmess::VMessConfig,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum ProxyProtocol {
     Vless(VlessConfig),
+    #[serde(rename = "vmess")]
+    Vmess(VMessConfig),
     Trojan(TrojanConfig),
     #[serde(rename = "anytls")]
     AnyTls(AnyTlsConfig),
@@ -17,6 +22,7 @@ impl ProxyProtocol {
     pub fn label(&self) -> &'static str {
         match self {
             ProxyProtocol::Vless(_) => "VLESS",
+            ProxyProtocol::Vmess(_) => "VMess",
             ProxyProtocol::Trojan(_) => "TROJAN",
             ProxyProtocol::AnyTls(_) => "AnyTLS",
             ProxyProtocol::Tuic(_) => "TUIC",
